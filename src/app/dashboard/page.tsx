@@ -1,16 +1,15 @@
-// src/app/dashboard/page.tsx
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 
-export default async function Dashboard() {
-  const supabase = createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export default async function DashboardPage() {
+  const supabase = await createServerSupabaseClient()
 
-  if (!user) redirect('/login')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Benvenuto, {user.email}!</h1>
+    <div>
+      <h1>Benvenuto, {user?.email}!</h1>
     </div>
   )
 }
