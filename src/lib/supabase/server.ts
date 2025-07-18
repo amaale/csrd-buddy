@@ -1,5 +1,5 @@
 // src/lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export const createServerSupabaseClient = () =>
@@ -8,13 +8,28 @@ export const createServerSupabaseClient = () =>
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
+        // leggi un singolo cookie
+        get(name: string) {
           return cookies().get(name)?.value
         },
-        set(name, value, options) {
-          cookies().set(name, value, options)
+        // leggi tutti i cookie in un array { name, value }
+        getAll() {
+          return cookies()
+            .getAll()
+            .map((c) => ({ name: c.name, value: c.value }))
         },
-        remove(name, options) {
+        // imposta un singolo cookie
+        set(name: string, value: string, options?: CookieOptions) {
+          cookies().set({ name, value, ...options })
+        },
+        // imposta più cookie da un array { name, value, options? }
+        setAll(items: { name: string; value: string; options?: CookieOptions }[]) {
+          items.forEach(({ name, value, options }) =>
+            cookies().set({ name, value, ...options })
+          )
+        },
+        // rimuovi un cookie
+        remove(name: string, options?: CookieOptions) {
           cookies().delete(name, options)
         },
       },
