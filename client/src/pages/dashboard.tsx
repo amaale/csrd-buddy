@@ -86,6 +86,86 @@ export default function Dashboard() {
           <TrendChart trend={trend} isLoading={trendLoading} />
         </div>
 
+        {/* Advanced Features Section */}
+        <div className="mb-8">
+          <div className="bg-white rounded-lg border border-neutral-200 p-6">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-neutral-900 mb-2">Enterprise Features</h2>
+                <p className="text-sm text-neutral-600">
+                  Advanced carbon accounting and CSRD compliance tools
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="font-medium text-green-800">PDF Processing</span>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    Extract expenses from PDF documents with AI classification
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="font-medium text-blue-800">XBRL Reports</span>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Generate CSRD-compliant structured reports in XBRL format
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span className="font-medium text-purple-800">Enhanced Database</span>
+                  </div>
+                  <p className="text-sm text-purple-700">
+                    Climatiq integration for industry-specific emission factors
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="text-center p-3 bg-neutral-50 rounded-lg">
+                  <div className="text-lg font-semibold text-neutral-900">
+                    {summary ? `${(summary.totalEmissions / 1000).toFixed(2)}` : '0.00'}
+                  </div>
+                  <div className="text-sm text-neutral-600">tonnes CO₂e</div>
+                  <div className="text-xs text-neutral-500">Total Footprint</div>
+                </div>
+                
+                <div className="text-center p-3 bg-neutral-50 rounded-lg">
+                  <div className="text-lg font-semibold text-neutral-900">
+                    {summary ? `€${((summary.totalEmissions / 1000) * 85).toFixed(0)}` : '€0'}
+                  </div>
+                  <div className="text-sm text-neutral-600">Carbon Cost</div>
+                  <div className="text-xs text-neutral-500">@ €85/tonne</div>
+                </div>
+                
+                <div className="text-center p-3 bg-neutral-50 rounded-lg">
+                  <div className="text-lg font-semibold text-neutral-900">
+                    {transactions ? transactions.length : 0}
+                  </div>
+                  <div className="text-sm text-neutral-600">Transactions</div>
+                  <div className="text-xs text-neutral-500">AI Classified</div>
+                </div>
+                
+                <div className="text-center p-3 bg-neutral-50 rounded-lg">
+                  <div className="text-lg font-semibold text-neutral-900">
+                    {reports ? reports.length : 0}
+                  </div>
+                  <div className="text-sm text-neutral-600">Reports</div>
+                  <div className="text-xs text-neutral-500">Generated</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Report Generation */}
         <ReportGeneration reports={reports} isLoading={reportsLoading} />
       </main>

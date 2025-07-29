@@ -1,8 +1,12 @@
 import { Leaf, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Link, useLocation } from "wouter";
+import { useTranslations } from "@/lib/translations";
 
 export function Header() {
+  const [location] = useLocation();
+  const { t } = useTranslations();
   return (
     <header className="bg-white material-shadow-1 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,10 +21,46 @@ export function Header() {
           </div>
           
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-primary font-medium border-b-2 border-primary pb-4">Dashboard</a>
-            <a href="#" className="text-neutral-700 hover:text-primary transition-colors">Reports</a>
-            <a href="#" className="text-neutral-700 hover:text-primary transition-colors">Data Sources</a>
-            <a href="#" className="text-neutral-700 hover:text-primary transition-colors">Settings</a>
+            <Link 
+              href="/" 
+              className={`transition-colors pb-4 ${
+                location === "/" 
+                  ? "text-primary font-medium border-b-2 border-primary" 
+                  : "text-neutral-700 hover:text-primary"
+              }`}
+            >
+              {t('dashboard')}
+            </Link>
+            <Link 
+              href="/reports" 
+              className={`transition-colors pb-4 ${
+                location === "/reports" 
+                  ? "text-primary font-medium border-b-2 border-primary" 
+                  : "text-neutral-700 hover:text-primary"
+              }`}
+            >
+              {t('reports')}
+            </Link>
+            <Link 
+              href="/data-sources" 
+              className={`transition-colors pb-4 ${
+                location === "/data-sources" 
+                  ? "text-primary font-medium border-b-2 border-primary" 
+                  : "text-neutral-700 hover:text-primary"
+              }`}
+            >
+              {t('dataSource')}
+            </Link>
+            <Link 
+              href="/settings" 
+              className={`transition-colors pb-4 ${
+                location === "/settings" 
+                  ? "text-primary font-medium border-b-2 border-primary" 
+                  : "text-neutral-700 hover:text-primary"
+              }`}
+            >
+              {t('settings')}
+            </Link>
           </nav>
 
           <div className="flex items-center space-x-4">

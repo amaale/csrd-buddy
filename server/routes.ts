@@ -1,12 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 import { insertUploadSchema, insertTransactionSchema, insertReportSchema } from "@shared/schema";
 import { classifyTransaction, classifyTransactionsBatch } from "./services/openai";
 import { calculateEmissions, initializeDefaultEmissionFactors } from "./services/emissions";
 import { parseCSV, validateCSVStructure } from "./services/csv-parser";
 import { generatePDFReport, ensureReportsDirectory } from "./services/pdf-generator";
+import { generateXBRLReport } from "./services/xbrl-generator";
+import { advancedAccounting } from "./services/advanced-accounting";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -27,22 +30,36 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+  
   // Initialize default emission factors
   await initializeDefaultEmissionFactors();
   
   // Ensure reports directory exists
   await ensureReportsDirectory();
 
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Upload CSV file and process transactions
-  app.post("/api/uploads", upload.single('file'), async (req, res) => {
+  app.post("/api/uploads", isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // For demo purposes, using a mock user ID
-      // In production, this would come from authentication
-      const userId = "demo-user-id";
+      // Get user ID from authenticated session
+      const userId = req.user.claims.sub;
 
       // Read and validate CSV file
       const csvContent = fs.readFileSync(req.file.path, 'utf-8');
@@ -137,9 +154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user uploads
-  app.get("/api/uploads", async (req, res) => {
+  app.get("/api/uploads", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = "demo-user-id"; // Mock user ID
+      const userId = req.user.claims.sub;
       const uploads = await storage.getUserUploads(userId);
       res.json(uploads);
     } catch (error) {
@@ -149,9 +166,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get transactions
-  app.get("/api/transactions", async (req, res) => {
+  app.get("/api/transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = "demo-user-id"; // Mock user ID
+      const userId = req.user.claims.sub;
       const transactions = await storage.getUserTransactions(userId);
       res.json(transactions);
     } catch (error) {
@@ -161,9 +178,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get emissions summary
-  app.get("/api/emissions/summary", async (req, res) => {
+  app.get("/api/emissions/summary", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = "demo-user-id"; // Mock user ID
+      const userId = req.user.claims.sub;
       const { startDate, endDate } = req.query;
 
       const start = startDate ? new Date(startDate as string) : undefined;
@@ -178,9 +195,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get emissions trend
-  app.get("/api/emissions/trend", async (req, res) => {
+  app.get("/api/emissions/trend", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = "demo-user-id"; // Mock user ID
+      const userId = req.user.claims.sub;
       const months = parseInt(req.query.months as string) || 12;
 
       const trend = await storage.getUserEmissionsTrend(userId, months);
@@ -192,9 +209,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate report
-  app.post("/api/reports", async (req, res) => {
+  app.post("/api/reports", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = "demo-user-id"; // Mock user ID
+      const userId = req.user.claims.sub;
       
       const reportSchema = insertReportSchema.extend({
         startDate: z.string().transform(str => new Date(str)),
@@ -234,9 +251,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user reports
-  app.get("/api/reports", async (req, res) => {
+  app.get("/api/reports", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = "demo-user-id"; // Mock user ID
+      const userId = req.user.claims.sub;
       const reports = await storage.getUserReports(userId);
       res.json(reports);
     } catch (error) {

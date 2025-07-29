@@ -2,15 +2,35 @@
 
 ## Overview
 
-CSRD Buddy is a comprehensive carbon emissions tracking application built for the Corporate Sustainability Reporting Directive (CSRD). The application enables businesses to upload financial transaction data via CSV files, automatically classify transactions using AI, calculate carbon emissions, and generate compliance reports. It follows GHG Protocol standards for Scope 1, 2, and 3 emissions tracking.
+CSRD Buddy is a production-ready micro-SaaS platform for European SMEs to generate CSRD-compliant ESG reports. The application enables businesses to upload financial transaction data via CSV files, automatically classify transactions using AI, calculate carbon emissions, and generate compliance reports. It follows GHG Protocol standards for Scope 1, 2, and 3 emissions tracking.
 
 ## Current Status (January 2025)
 
-The application is fully functional with complete frontend dashboard, AI-powered transaction classification, emissions calculations using DEFRA 2024 factors, and PDF report generation. The system is now ready for testing and deployment.
+**PRODUCTION READY**: The application has been transformed from prototype to a functioning business platform with real user authentication, database persistence, and enterprise features. Key production capabilities include:
+- Replit OpenID authentication with user sessions
+- PostgreSQL database with proper user data isolation
+- AI-powered transaction classification with OpenAI integration
+- PDF and XBRL report generation with DEFRA 2024 factors
+- Multi-language support for 6 European markets
+- Enterprise landing page with pricing and feature showcase
+- Protected API routes with proper authorization
+- Advanced analytics and carbon accounting features
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes (January 29, 2025)
+
+**Production Transformation Complete**: 
+- Implemented Replit OpenID authentication system
+- Updated database schema for authenticated users
+- Protected all API routes with authentication middleware
+- Created professional landing page with pricing tiers
+- Added authentication routing (landing page for anonymous users, dashboard for authenticated)
+- Removed all mock user data - now uses real authenticated user sessions
+- Language switching system fully functional across the application
+- System ready for real business use with user registration and data isolation
 
 ## System Architecture
 
@@ -43,17 +63,21 @@ The application uses a monorepo structure with a clear separation between client
 ### Backend Architecture
 - **Express Server**: RESTful API with TypeScript
 - **Database Layer**: Drizzle ORM with PostgreSQL (Neon serverless)
-- **File Processing**: Multer for CSV file uploads with validation
-- **AI Integration**: OpenAI GPT-4 for transaction classification
-- **PDF Generation**: PDFKit for compliance report generation
+- **File Processing**: Multer for CSV and PDF file uploads with validation
+- **AI Integration**: OpenAI GPT-4 for transaction classification with fallback system
+- **Report Generation**: PDFKit for PDF reports and custom XBRL generator for structured compliance reports
 - **CSV Processing**: Custom parser with validation and error handling
+- **PDF Processing**: Advanced PDF expense extraction with AI classification
+- **Emission Factors**: Climatiq API integration with enhanced emission factor database
+- **Advanced Analytics**: Carbon intensity analysis, benchmarking, and reduction opportunities
 
 ### Database Schema
-The application uses five main entities:
-- **Users**: Company user accounts with authentication
-- **Uploads**: CSV file upload tracking with processing status
-- **Transactions**: Individual financial transactions with emissions data
-- **Reports**: Generated compliance reports with metadata
+The application uses six main entities with proper authentication:
+- **Users**: OpenID-authenticated user accounts with profile data
+- **Sessions**: Secure session storage for authentication state
+- **Uploads**: CSV file upload tracking with processing status (user-specific)
+- **Transactions**: Individual financial transactions with emissions data (user-specific)
+- **Reports**: Generated compliance reports with metadata (user-specific)
 - **EmissionFactors**: DEFRA 2024-based emission calculation factors
 
 ## Data Flow

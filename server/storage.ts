@@ -1,6 +1,6 @@
 import { 
   users, uploads, transactions, reports, emissionFactors,
-  type User, type InsertUser, type Upload, type InsertUpload,
+  type User, type InsertUser, type UpsertUser, type Upload, type InsertUpload,
   type Transaction, type InsertTransaction, type Report, type InsertReport,
   type EmissionFactor, type InsertEmissionFactor
 } from "@shared/schema";
@@ -8,10 +8,9 @@ import { db } from "./db";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User methods
+  // User methods for authentication
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Upload methods
   createUpload(upload: InsertUpload): Promise<Upload>;
@@ -56,20 +55,23 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // User operations for authentication
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return user;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
     return user;
   }

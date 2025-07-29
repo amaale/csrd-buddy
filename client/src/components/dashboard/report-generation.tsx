@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { FileText, Plus, Download, Code, MoreHorizontal, Calendar } from "lucide-react";
+import { FileText, Plus, Download, Code, MoreHorizontal, Calendar, Settings, Database, FileUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +35,16 @@ type ReportFormData = z.infer<typeof reportFormSchema>;
 
 export function ReportGeneration({ reports, isLoading }: ReportGenerationProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("reports");
+  const [dataSourceSettings, setDataSourceSettings] = useState({
+    includeScope1: true,
+    includeScope2: true,
+    includeScope3: true,
+    includeVerifiedOnly: false,
+    emissionFactorSource: "defra_2024",
+    reportFormat: "pdf",
+    language: "en"
+  });
   const { toast } = useToast();
 
   const form = useForm<ReportFormData>({
@@ -251,7 +264,24 @@ export function ReportGeneration({ reports, isLoading }: ReportGenerationProps) 
       </CardHeader>
       
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Reports
+            </TabsTrigger>
+            <TabsTrigger value="datasources" className="flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Data Sources
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reports" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Existing Reports */}
           {reports?.map((report) => (
             <div key={report.id} className="border border-neutral-200 rounded-lg p-4 hover:material-shadow-1 transition-shadow">
@@ -319,7 +349,242 @@ export function ReportGeneration({ reports, isLoading }: ReportGenerationProps) 
               </div>
             </DialogTrigger>
           </Dialog>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="datasources" className="mt-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">Data Source Configuration</h3>
+                <p className="text-sm text-neutral-600 mb-4">
+                  Configure which data sources to include in your reports
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Emission Scopes */}
+                <Card className="p-4">
+                  <h4 className="font-medium text-neutral-900 mb-3">Emission Scopes</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">Scope 1 (Direct)</span>
+                        <p className="text-xs text-neutral-500">Company owned vehicles, facilities</p>
+                      </div>
+                      <Switch
+                        checked={dataSourceSettings.includeScope1}
+                        onCheckedChange={(checked) => 
+                          setDataSourceSettings(prev => ({ ...prev, includeScope1: checked }))
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">Scope 2 (Indirect Energy)</span>
+                        <p className="text-xs text-neutral-500">Purchased electricity, heating</p>
+                      </div>
+                      <Switch
+                        checked={dataSourceSettings.includeScope2}
+                        onCheckedChange={(checked) => 
+                          setDataSourceSettings(prev => ({ ...prev, includeScope2: checked }))
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">Scope 3 (Value Chain)</span>
+                        <p className="text-xs text-neutral-500">Business travel, purchased goods</p>
+                      </div>
+                      <Switch
+                        checked={dataSourceSettings.includeScope3}
+                        onCheckedChange={(checked) => 
+                          setDataSourceSettings(prev => ({ ...prev, includeScope3: checked }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Data Quality */}
+                <Card className="p-4">
+                  <h4 className="font-medium text-neutral-900 mb-3">Data Quality</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">Verified Data Only</span>
+                        <p className="text-xs text-neutral-500">Include only manually verified transactions</p>
+                      </div>
+                      <Switch
+                        checked={dataSourceSettings.includeVerifiedOnly}
+                        onCheckedChange={(checked) => 
+                          setDataSourceSettings(prev => ({ ...prev, includeVerifiedOnly: checked }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Emission Factor Source</label>
+                      <Select
+                        value={dataSourceSettings.emissionFactorSource}
+                        onValueChange={(value) => 
+                          setDataSourceSettings(prev => ({ ...prev, emissionFactorSource: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="defra_2024">DEFRA 2024 (UK)</SelectItem>
+                          <SelectItem value="climatiq">Climatiq Database</SelectItem>
+                          <SelectItem value="epa_2024">EPA 2024 (US)</SelectItem>
+                          <SelectItem value="ademe_2024">ADEME 2024 (France)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Preview */}
+              <Card className="p-4 bg-neutral-50">
+                <h4 className="font-medium text-neutral-900 mb-3">Data Source Preview</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-green-600">
+                      {dataSourceSettings.includeScope1 ? '✓' : '✗'}
+                    </div>
+                    <div className="text-neutral-600">Scope 1</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-blue-600">
+                      {dataSourceSettings.includeScope2 ? '✓' : '✗'}
+                    </div>
+                    <div className="text-neutral-600">Scope 2</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-purple-600">
+                      {dataSourceSettings.includeScope3 ? '✓' : '✗'}
+                    </div>
+                    <div className="text-neutral-600">Scope 3</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-orange-600">
+                      {dataSourceSettings.includeVerifiedOnly ? 'Verified' : 'All Data'}
+                    </div>
+                    <div className="text-neutral-600">Quality</div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">Report Settings</h3>
+                <p className="text-sm text-neutral-600 mb-4">
+                  Configure default settings for report generation
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="p-4">
+                  <h4 className="font-medium text-neutral-900 mb-3">Report Format</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Default Format</label>
+                      <Select
+                        value={dataSourceSettings.reportFormat}
+                        onValueChange={(value) => 
+                          setDataSourceSettings(prev => ({ ...prev, reportFormat: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pdf">PDF Report</SelectItem>
+                          <SelectItem value="xbrl">XBRL (Structured)</SelectItem>
+                          <SelectItem value="both">Both PDF & XBRL</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Language</label>
+                      <Select
+                        value={dataSourceSettings.language}
+                        onValueChange={(value) => 
+                          setDataSourceSettings(prev => ({ ...prev, language: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">🇬🇧 English</SelectItem>
+                          <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                          <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                          <SelectItem value="es">🇪🇸 Español</SelectItem>
+                          <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                          <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-4">
+                  <h4 className="font-medium text-neutral-900 mb-3">Advanced Options</h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <FileUp className="w-4 h-4 text-blue-600 mt-0.5" />
+                        <div>
+                          <span className="text-sm font-medium text-blue-800">PDF Processing</span>
+                          <p className="text-xs text-blue-700">Extract expenses from PDF documents</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <Code className="w-4 h-4 text-green-600 mt-0.5" />
+                        <div>
+                          <span className="text-sm font-medium text-green-800">XBRL Export</span>
+                          <p className="text-xs text-green-700">Generate structured compliance reports</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <Database className="w-4 h-4 text-purple-600 mt-0.5" />
+                        <div>
+                          <span className="text-sm font-medium text-purple-800">Enhanced Factors</span>
+                          <p className="text-xs text-purple-700">Climatiq database integration</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="flex justify-end">
+                <Button 
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('csrd-buddy-data-source-settings', JSON.stringify(dataSourceSettings));
+                      // Show success feedback - you could add toast notification here too
+                      console.log('Data source settings saved:', dataSourceSettings);
+                    } catch (error) {
+                      console.error('Failed to save data source settings:', error);
+                    }
+                  }}
+                  className="bg-secondary hover:bg-secondary-dark text-white"
+                >
+                  Save Settings
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
