@@ -13,7 +13,7 @@ export default function Landing() {
             <span className="text-2xl font-bold text-gray-800">CSRD Buddy</span>
           </div>
           <Button 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/'}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
             Get Started
@@ -33,7 +33,7 @@ export default function Landing() {
         <div className="space-x-4">
           <Button 
             size="lg" 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/'}
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
           >
             Start Free Trial
@@ -154,7 +154,7 @@ export default function Landing() {
                 </p>
                 <Button 
                   size="lg"
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/'}
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   Start Your Free Trial

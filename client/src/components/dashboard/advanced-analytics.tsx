@@ -59,36 +59,71 @@ export function AdvancedAnalytics() {
   const [carbonPrice, setCarbonPrice] = useState(85);
 
   // Carbon intensity analysis
-  const { data: carbonIntensity } = useQuery<CarbonIntensity>({
+  const { data: carbonIntensity } = useQuery({
     queryKey: ['/api/analytics/carbon-intensity', revenue],
-    enabled: revenue > 0
+    enabled: revenue > 0,
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/carbon-intensity?revenue=${revenue}`);
+      if (!response.ok) throw new Error('Failed to fetch carbon intensity');
+      return response.json() as Promise<CarbonIntensity>;
+    }
   });
 
   // Emission trends
-  const { data: trends } = useQuery<EmissionTrend[]>({
-    queryKey: ['/api/analytics/trends']
+  const { data: trends } = useQuery({
+    queryKey: ['/api/analytics/trends'],
+    queryFn: async () => {
+      const response = await fetch('/api/analytics/trends');
+      if (!response.ok) throw new Error('Failed to fetch trends');
+      return response.json() as Promise<EmissionTrend[]>;
+    }
   });
 
   // Carbon budget tracking
-  const { data: carbonBudget } = useQuery<CarbonBudget>({
+  const { data: carbonBudget } = useQuery({
     queryKey: ['/api/analytics/carbon-budget', annualTarget],
-    enabled: annualTarget > 0
+    enabled: annualTarget > 0,
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/carbon-budget?annualTarget=${annualTarget}`);
+      if (!response.ok) throw new Error('Failed to fetch carbon budget');
+      return response.json() as Promise<CarbonBudget>;
+    }
   });
 
   // Sector benchmarking
-  const { data: benchmark } = useQuery<Benchmark>({
+  const { data: benchmark } = useQuery({
     queryKey: ['/api/analytics/benchmarking', sector, revenue],
-    enabled: sector && revenue > 0
+    enabled: Boolean(sector) && revenue > 0,
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/benchmarking?sector=${sector}&revenue=${revenue}`);
+      if (!response.ok) throw new Error('Failed to fetch benchmark data');
+      return response.json() as Promise<Benchmark>;
+    }
   });
 
   // Reduction opportunities
-  const { data: opportunities } = useQuery<ReductionOpportunity[]>({
-    queryKey: ['/api/analytics/reduction-opportunities']
+  const { data: opportunities } = useQuery({
+    queryKey: ['/api/analytics/reduction-opportunities'],
+    queryFn: async () => {
+      const response = await fetch('/api/analytics/reduction-opportunities');
+      if (!response.ok) throw new Error('Failed to fetch opportunities');
+      return response.json() as Promise<ReductionOpportunity[]>;
+    }
   });
 
   // Carbon costs
   const { data: carbonCosts } = useQuery({
-    queryKey: ['/api/analytics/carbon-costs', carbonPrice]
+    queryKey: ['/api/analytics/carbon-costs', carbonPrice],
+    queryFn: async () => {
+      const response = await fetch(`/api/analytics/carbon-costs?carbonPrice=${carbonPrice}`);
+      if (!response.ok) throw new Error('Failed to fetch carbon costs');
+      return response.json() as Promise<{
+        totalCost: number;
+        costByScope: { scope1: number; scope2: number; scope3: number };
+        monthlyAverage: number;
+        projectedAnnual: number;
+      }>;
+    }
   });
 
   const getTrendIcon = (trend: string) => {
@@ -323,27 +358,27 @@ export function AdvancedAnalytics() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-neutral-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {benchmark.companyIntensity.toFixed(3)}
+                        {benchmark.companyIntensity?.toFixed(3) || '0.000'}
                       </div>
                       <div className="text-sm text-neutral-600">Your Intensity</div>
                     </div>
                     <div className="text-center p-4 bg-neutral-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {benchmark.averageIntensity.toFixed(3)}
+                        {benchmark.averageIntensity?.toFixed(3) || '0.000'}
                       </div>
                       <div className="text-sm text-neutral-600">Sector Average</div>
                     </div>
                     <div className="text-center p-4 bg-neutral-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {benchmark.percentile}th
+                        {benchmark.percentile || 0}th
                       </div>
                       <div className="text-sm text-neutral-600">Percentile</div>
                     </div>
                   </div>
 
-                  <div className={`p-3 rounded-lg text-center ${getPerformanceBadge(benchmark.performance)}`}>
+                  <div className={`p-3 rounded-lg text-center ${getPerformanceBadge(benchmark.performance || 'average')}`}>
                     <span className="font-medium capitalize">
-                      {benchmark.performance.replace('_', ' ')} Performance
+                      {(benchmark.performance || 'average').replace('_', ' ')} Performance
                     </span>
                   </div>
                 </div>
@@ -431,13 +466,13 @@ export function AdvancedAnalytics() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-neutral-50 rounded-lg">
                     <div className="text-2xl font-bold text-neutral-900">
-                      €{carbonCosts.totalCost.toFixed(2)}
+                      €{carbonCosts.totalCost?.toFixed(2) || '0.00'}
                     </div>
                     <div className="text-sm text-neutral-600">Total Carbon Cost</div>
                   </div>
                   <div className="text-center p-4 bg-neutral-50 rounded-lg">
                     <div className="text-2xl font-bold text-neutral-900">
-                      €{carbonCosts.projectedAnnual.toFixed(2)}
+                      €{carbonCosts.projectedAnnual?.toFixed(2) || '0.00'}
                     </div>
                     <div className="text-sm text-neutral-600">Projected Annual</div>
                   </div>

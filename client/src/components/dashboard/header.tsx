@@ -1,12 +1,52 @@
-import { Leaf, Bell } from "lucide-react";
+import { Leaf, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "wouter";
 import { useTranslations } from "@/lib/translations";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
   const [location] = useLocation();
   const { t } = useTranslations();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // Reload to trigger authentication check
+        window.location.reload();
+      } else {
+        toast({
+          title: "Logout failed",
+          description: "Failed to logout. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Logout failed",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getUserInitials = () => {
+    if (!user?.firstName || !user?.lastName) return "U";
+    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  };
+
+  const getUserName = () => {
+    if (!user?.firstName || !user?.lastName) return "User";
+    return `${user.firstName} ${user.lastName}`;
+  };
   return (
     <header className="bg-white material-shadow-1 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,14 +107,26 @@ export function Header() {
             <Button variant="ghost" size="icon" className="text-neutral-500 hover:text-neutral-700">
               <Bell className="w-4 h-4" />
             </Button>
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-8 h-8">
-                <AvatarFallback className="bg-secondary text-white text-sm font-medium">
-                  JD
-                </AvatarFallback>
-              </Avatar>
-              <span className="hidden md:block text-sm font-medium text-neutral-900">John Doe</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-3 px-3 py-2 h-auto">
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback className="bg-secondary text-white text-sm font-medium">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:block text-sm font-medium text-neutral-900">
+                    {getUserName()}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 cursor-pointer">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

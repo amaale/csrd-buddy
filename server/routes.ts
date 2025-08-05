@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./simpleAuth";
 import { z } from "zod";
 import { insertUploadSchema, insertTransactionSchema, insertReportSchema } from "@shared/schema";
 import { classifyTransaction, classifyTransactionsBatch } from "./services/openai";
@@ -42,9 +42,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const user = await storage.getUser(userId);
-      res.json(user);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -59,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get user ID from authenticated session
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
 
       // Read and validate CSV file
       const csvContent = fs.readFileSync(req.file.path, 'utf-8');
@@ -156,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user uploads
   app.get("/api/uploads", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const uploads = await storage.getUserUploads(userId);
       res.json(uploads);
     } catch (error) {
@@ -168,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get transactions
   app.get("/api/transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const transactions = await storage.getUserTransactions(userId);
       res.json(transactions);
     } catch (error) {
@@ -180,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get emissions summary
   app.get("/api/emissions/summary", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const { startDate, endDate } = req.query;
 
       const start = startDate ? new Date(startDate as string) : undefined;
@@ -197,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get emissions trend
   app.get("/api/emissions/trend", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const months = parseInt(req.query.months as string) || 12;
 
       const trend = await storage.getUserEmissionsTrend(userId, months);
@@ -211,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate report
   app.post("/api/reports", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       
       const reportSchema = insertReportSchema.extend({
         startDate: z.string().transform(str => new Date(str)),
@@ -253,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user reports
   app.get("/api/reports", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const reports = await storage.getUserReports(userId);
       res.json(reports);
     } catch (error) {
